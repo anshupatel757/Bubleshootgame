@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bubble Boom – Premium</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="gameArea">
+    <div id="scoreBoard" class="glass">
+      <span>Score:</span> <strong id="scoreValue">0</strong>
+      <button id="muteBtn" class="btn small">🔊</button>
+    </div>
+
+    <!-- Level Select -->
+    <div id="levelSelect" class="panel glass">
+      <h2>🎮 Select Difficulty</h2>
+      <div class="btns">
+        <button class="btn" onclick="startGame('easy')">Easy</button>
+        <button class="btn" onclick="startGame('medium')">Medium</button>
+        <button class="btn hard" onclick="startGame('hard')">Hard</button>
+      </div>
+      <p class="hint">Tip: Pop normal bubbles. 💣 Boom bubble = Game Over!</p>
+    </div>
+
+    <!-- Game Over -->
+    <div id="gameOver" class="panel glass">
+      <h2>💥 Game Over!</h2>
+      <p id="finalScore"></p>
+      <button class="btn" onclick="restartGame()">Restart</button>
+    </div>
+  </div>
+
+  <!-- 🔊 Audio -->
+  <audio id="popSound" src="https://www.fesliyanstudios.com/play-mp3/4386" preload="auto"></audio>
+  <audio id="boomSound" src="https://www.fesliyanstudios.com/play-mp3/6675" preload="auto"></audio>
+  <audio id="bgMusicNormal" src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" loop preload="auto"></audio>
+  <audio id="bgMusicFast" src="https://www.fesliyanstudios.com/play-mp3/387" loop preload="auto"></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>

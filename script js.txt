@@ -1,0 +1,184 @@
+const gameArea = document.getElementById("gameArea");
+const scoreEl = document.getElementById("scoreValue");
+const gameOverScreen = document.getElementById("gameOver");
+const finalScore = document.getElementById("finalScore");
+const levelSelect = document.getElementById("levelSelect");
+const muteBtn = document.getElementById("muteBtn");
+
+const popSound = document.getElementById("popSound");
+const boomSound = document.getElementById("boomSound");
+const bgMusicNormal = document.getElementById("bgMusicNormal");
+const bgMusicFast = document.getElementById("bgMusicFast");
+
+let score = 0,
+  spawnRate = 800,
+  speedBase = 6,
+  currentMusic = null,
+  muted = false;
+
+const bubbles = new Set();
+let rafId = null,
+  spawnTimer = null;
+
+function rand(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function spawnBubble() {
+  const el = document.createElement("div");
+  el.className = "bubble";
+  let size = rand(34, 82);
+  const isBoom = Math.random() < 0.1;
+
+  if (isBoom) {
+    size = rand(90, 150);
+    el.classList.add("boom");
+    el.textContent = "💣";
+  }
+
+  el.style.width = size + "px";
+  el.style.height = size + "px";
+  el.style.setProperty("--h", Math.floor(rand(180, 260)));
+
+  const baseX = rand(10, window.innerWidth - size - 10);
+  let y = -size - 10;
+
+  const speed = speedBase * rand(0.85, 1.25),
+    amplitude = rand(6, 18),
+    freq = rand(0.008, 0.016),
+    phase = rand(0, Math.PI * 2);
+
+  const node = { el, size, baseX, y, speed, amplitude, freq, phase, isBoom, alive: true };
+  bubbles.add(node);
+  gameArea.appendChild(el);
+
+  const pop = () => {
+    if (!node.alive) return;
+
+    if (node.isBoom) {
+      if (!muted) {
+        boomSound.currentTime = 0;
+        boomSound.play();
+      }
+      endGame();
+    } else {
+      if (!muted) {
+        popSound.currentTime = 0;
+        popSound.play();
+      }
+      score++;
+      scoreEl.textContent = score;
+      destroy(node);
+    }
+  };
+
+  el.addEventListener("click", pop, { passive: true });
+  el.addEventListener(
+    "touchstart",
+    (e) => {
+      e.preventDefault();
+      pop();
+    },
+    { passive: false }
+  );
+}
+
+function destroy(node) {
+  node.alive = false;
+  if (node.el && node.el.parentNode) {
+    node.el.remove();
+  }
+  bubbles.delete(node);
+}
+
+function tick() {
+  bubbles.forEach((node) => {
+    if (!node.alive) return;
+    node.phase += node.freq * 16;
+    const offsetX = Math.sin(node.phase) * node.amplitude;
+    node.y += node.speed;
+    node.el.style.transform = `translate(${node.baseX + offsetX}px,${node.y}px)`;
+    if (node.y > window.innerHeight + node.size + 20) {
+      destroy(node);
+    }
+  });
+  rafId = requestAnimationFrame(tick);
+}
+
+function startSpawner() {
+  stopSpawner();
+  spawnTimer = setInterval(spawnBubble, spawnRate);
+}
+
+function stopSpawner() {
+  if (spawnTimer) {
+    clearInterval(spawnTimer);
+    spawnTimer = null;
+  }
+}
+
+function playMusic(m) {
+  if (currentMusic) {
+    currentMusic.pause();
+    currentMusic.currentTime = 0;
+  }
+  currentMusic = m;
+  if (!muted) {
+    currentMusic.currentTime = 0;
+    currentMusic.play();
+  }
+}
+
+function startGame(level) {
+  if (level === "easy") {
+    speedBase = 5;
+    spawnRate = 1000;
+    playMusic(bgMusicNormal);
+  } else if (level === "medium") {
+    speedBase = 7.5;
+    spawnRate = 650;
+    playMusic(bgMusicNormal);
+  } else {
+    speedBase = 10.5;
+    spawnRate = 420;
+    playMusic(bgMusicFast);
+  }
+
+  score = 0;
+  scoreEl.textContent = score;
+  levelSelect.style.display = "none";
+  gameOverScreen.style.display = "none";
+  bubbles.forEach(destroy);
+
+  if (!rafId) rafId = requestAnimationFrame(tick);
+  startSpawner();
+}
+
+function endGame() {
+  stopSpawner();
+  if (rafId) {
+    cancelAnimationFrame(rafId);
+    rafId = null;
+  }
+  if (currentMusic) currentMusic.pause();
+  bubbles.forEach(destroy);
+  finalScore.textContent = `Your Score: ${score}`;
+  gameOverScreen.style.display = "block";
+}
+
+function restartGame() {
+  gameOverScreen.style.display = "none";
+  levelSelect.style.display = "block";
+}
+
+muteBtn.addEventListener("click", () => {
+  muted = !muted;
+  muteBtn.textContent = muted ? "🔇" : "🔊";
+  if (currentMusic) {
+    if (muted) {
+      currentMusic.pause();
+    } else {
+      currentMusic.play();
+    }
+  }
+});
